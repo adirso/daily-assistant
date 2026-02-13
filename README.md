@@ -351,10 +351,46 @@ daily-assistant/
 - ✅ Check your OpenAI account billing status
 
 ### Database connection errors
-- ✅ Verify MySQL is running: `mysql --version`
-- ✅ Check database credentials in `.env`
+
+#### Access Denied Error
+If you see `Access denied for user 'username'@'localhost' to database 'telegram_bot_assistant'`:
+
+**Solution 1: Grant permissions to existing user**
+```bash
+# Login as MySQL root user
+mysql -u root -p
+
+# Then run these SQL commands:
+CREATE DATABASE IF NOT EXISTS telegram_bot_assistant CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+GRANT ALL PRIVILEGES ON telegram_bot_assistant.* TO 'mia'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+**Solution 2: Create database and user**
+```bash
+# Login as MySQL root user
+mysql -u root -p
+
+# Then run these SQL commands:
+CREATE DATABASE IF NOT EXISTS telegram_bot_assistant CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS 'mia'@'localhost' IDENTIFIED BY 'your_password_here';
+GRANT ALL PRIVILEGES ON telegram_bot_assistant.* TO 'mia'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+**Solution 3: Use root user temporarily**
+If you can't grant permissions, you can use the root user in your `.env` file:
+```env
+DB_USER=root
+DB_PASSWORD=your_root_password
+```
+
+#### Other database issues
+- ✅ Verify MySQL is running: `mysql --version` or `systemctl status mysql`
+- ✅ Check database credentials in `.env` match your MySQL setup
 - ✅ Ensure database exists: `mysql -u user -p -e "SHOW DATABASES;"`
 - ✅ Test connection: `mysql -u user -p -h host database_name`
+- ✅ Check MySQL user has CREATE/ALTER permissions for migrations
 
 ### Migration errors
 - ✅ Check MySQL user has CREATE/ALTER permissions

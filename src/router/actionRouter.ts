@@ -66,10 +66,15 @@ export const actionRouter = {
     },
     
     async handleUserAction(action: ParsedAction, user: User): Promise<HandlerResult> {
-        if (action.operation === 'set_name' && action.parameters?.name) {
-            return await userHandler.setCustomName(user.id, action.parameters.name);
+        switch (action.operation) {
+            case 'set_name':
+                if (action.parameters?.name) {
+                    return await userHandler.setCustomName(user.id, action.parameters.name);
+                }
+                throw new Error('Name is required for set_name operation');
+            
+            default:
+                throw new Error(`Unknown user operation: ${action.operation}`);
         }
-        
-        throw new Error(`Unknown user operation: ${action.operation}`);
     }
 };

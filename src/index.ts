@@ -37,6 +37,44 @@ function initializeBot() {
             return;
         }
         
+        // Handle /start command - send welcome message
+        if (msg.text === '/start') {
+            try {
+                await handleMessage(msg); // Just ensure user exists
+                const welcomeMessage = `👋 שלום! אני העוזר שלך לניהול משימות, קניות ולוח שנה.
+
+📝 **מה אני יכול לעשות:**
+• ניהול רשימת משימות (Todos) עם עדיפויות ותאריכי יעד
+• ניהול רשימת קניות עם קטגוריות וכמויות
+• ניהול לוח שנה עם אירועים ותזכורות
+
+💬 **איך להשתמש:**
+פשוט כתוב לי מה אתה רוצה לעשות בעברית או באנגלית, ואני אבין!
+
+**דוגמאות:**
+• "מה אני צריך לעשות היום?"
+• "הוסף חלב לרשימת הקניות"
+• "יש לי פגישה מחר בשעה 14:00"
+• "סיימתי משימה מספר 1"
+• "קניתי הכל"
+
+⚙️ **פקודות:**
+• /timezone - הגדר אזור זמן (IL או UTC)
+• /setname השם שלך - הגדר שם מותאם אישית
+
+🎯 **בקבוצות:**
+אפשר לנהל פריטים עבור "רק אני", "כולנו" או "אני ו-X"
+
+בואו נתחיל! כתוב לי מה תרצה לעשות.`;
+                
+                await sendResponse(msg.chat.id, welcomeMessage);
+                return;
+            } catch (error: any) {
+                console.error('Error handling /start:', error);
+                return;
+            }
+        }
+        
         // Handle /setname command
         if (msg.text.startsWith('/setname ')) {
             try {
@@ -137,6 +175,38 @@ function initializeBot() {
             // Process message and get context
             const context = await handleMessage(msg);
             
+            // Send welcome message for new users
+            if (context.isNewUser) {
+                const welcomeMessage = `👋 שלום! אני העוזר שלך לניהול משימות, קניות ולוח שנה.
+
+📝 **מה אני יכול לעשות:**
+• ניהול רשימת משימות (Todos) עם עדיפויות ותאריכי יעד
+• ניהול רשימת קניות עם קטגוריות וכמויות
+• ניהול לוח שנה עם אירועים ותזכורות
+
+💬 **איך להשתמש:**
+פשוט כתוב לי מה אתה רוצה לעשות בעברית או באנגלית, ואני אבין!
+
+**דוגמאות:**
+• "מה אני צריך לעשות היום?"
+• "הוסף חלב לרשימת הקניות"
+• "יש לי פגישה מחר בשעה 14:00"
+• "סיימתי משימה מספר 1"
+• "קניתי הכל"
+
+⚙️ **פקודות:**
+• /timezone - הגדר אזור זמן (IL או UTC)
+• /setname השם שלך - הגדר שם מותאם אישית
+• /start - הצג הודעת פתיחה זו
+
+🎯 **בקבוצות:**
+אפשר לנהל פריטים עבור "רק אני", "כולנו" או "אני ו-X"
+
+בואו נתחיל! כתוב לי מה תרצה לעשות.`;
+                
+                await sendResponse(msg.chat.id, welcomeMessage);
+            }
+            
             // Get available users for context
             const availableUsers = await scopeParser.getAvailableUsers(
                 context.user.id,
@@ -168,10 +238,22 @@ function initializeBot() {
             const parseResult = await parseMessage(msg.text, llmContext, context.messageAuditId || 0);
             
             if (!parseResult.success || !parseResult.action) {
-                await sendResponse(
-                    msg.chat.id,
-                    parseResult.error || 'לא הבנתי. תוכל לנסח מחדש?'
-                );
+                const errorMessage = `🤔 לא הבנתי את הבקשה שלך.
+
+💡 **מה אני יכול לעשות:**
+• ניהול משימות: "הוסף משימה", "מה אני צריך לעשות היום?"
+• ניהול קניות: "הוסף חלב", "מה אני צריך לקנות?"
+• ניהול לוח שנה: "יש לי פגישה מחר", "מה יש לי בלוח השנה השבוע?"
+
+📝 **דוגמאות:**
+• "הוסף משימת בדיקת קוד עם עדיפות גבוהה"
+• "הוסף 2 ליטר חלב לרשימת הקניות"
+• "יש לי פגישת צוות מחר בשעה 14:00"
+• "מה אני צריך לעשות היום?"
+
+נסה לנסח מחדש או כתוב /start לראות את כל האפשרויות.`;
+                
+                await sendResponse(msg.chat.id, errorMessage);
                 return;
             }
             

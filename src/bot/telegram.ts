@@ -20,15 +20,18 @@ interface MessageContext {
     isGroup: boolean;
     messageAuditId: number | null;
     message: Message;
+    isNewUser: boolean;
 }
 
 /**
  * Ensure user exists in database, create if not
  */
-export async function ensureUser(telegramUser: any): Promise<User> {
+export async function ensureUser(telegramUser: any): Promise<{ user: User; isNew: boolean }> {
     let user = await UserModel.findByTelegramId(telegramUser.id);
+    let isNew = false;
     
     if (!user) {
+        isNew = true;
         user = await UserModel.create({
             telegramUserId: telegramUser.id,
             telegramUsername: telegramUser.username || null,
@@ -58,7 +61,7 @@ export async function ensureUser(telegramUser: any): Promise<User> {
     if (!user) {
         throw new Error('Failed to create or update user');
     }
-    return user;
+    return { user, isNew };
 }
 
 /**
@@ -108,7 +111,7 @@ export async function handleMessage(msg: Message): Promise<MessageContext> {
         }
         
         // Ensure user exists
-        const user = await ensureUser(msg.from);
+        const { user, isNew } = await ensureUser(msg.from);
         
         // Determine if group or private chat
         const isGroup = msg.chat.type !== 'private';
@@ -136,7 +139,8 @@ export async function handleMessage(msg: Message): Promise<MessageContext> {
             group,
             isGroup,
             messageAuditId: messageAuditId || 0,
-            message: msg
+            message: msg,
+            isNewUser: isNew
         };
     } catch (error) {
         console.error('Error handling message:', error);

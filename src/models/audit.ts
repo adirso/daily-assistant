@@ -56,24 +56,21 @@ export const MessageAuditModel = {
      * Get all users with their chat IDs (for notifications)
      */
     async getAllUsersWithChatIds(): Promise<Array<{ userId: number; chatId: number }>> {
+        // Use subquery to get the most recent chat_id for each user
         const [rows] = await pool.execute<any[]>(
-            `SELECT DISTINCT user_id, chat_id 
-             FROM message_audit 
-             WHERE group_id IS NULL 
-             ORDER BY user_id, received_at DESC`
+            `SELECT user_id, chat_id 
+             FROM (
+                 SELECT user_id, chat_id, 
+                        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY received_at DESC) as rn
+                 FROM message_audit 
+                 WHERE group_id IS NULL
+             ) AS ranked
+             WHERE rn = 1`
         );
         
-        // Get the most recent chat_id for each user
-        const userChatMap = new Map<number, number>();
-        for (const row of rows) {
-            if (!userChatMap.has(row.user_id)) {
-                userChatMap.set(row.user_id, row.chat_id);
-            }
-        }
-        
-        return Array.from(userChatMap.entries()).map(([userId, chatId]) => ({
-            userId,
-            chatId
+        return rows.map(row => ({
+            userId: row.user_id,
+            chatId: row.chat_id
         }));
     }
 };
