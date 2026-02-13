@@ -6,6 +6,7 @@ import { UserModel } from './models/user.js';
 import { scopeParser } from './utils/scopeParser.js';
 import { timezoneUtils } from './utils/timezone.js';
 import { runMigrations } from './database/migrate.js';
+import { schedulerService } from './services/scheduler.js';
 import type { Message } from 'node-telegram-bot-api';
 
 dotenv.config();
@@ -19,6 +20,9 @@ dotenv.config();
         
         // Start bot after migrations complete
         initializeBot();
+        
+        // Start scheduler service
+        schedulerService.start();
     } catch (error) {
         console.error('❌ Failed to run migrations:', error);
         process.exit(1);
@@ -51,6 +55,79 @@ function initializeBot() {
             } catch (error: any) {
                 console.error('Error handling /setname:', error);
                 await sendResponse(msg.chat.id, 'שגיאה בהגדרת השם: ' + (error.message || String(error)));
+                return;
+            }
+        }
+        
+        // Handle /timezone command
+        if (msg.text === '/timezone') {
+            try {
+                const context = await handleMessage(msg);
+                
+                // Create keyboard with timezone options
+                const keyboard = {
+                    reply_markup: {
+                        keyboard: [
+                            [{ text: '🇮🇱 IL (Asia/Jerusalem)' }],
+                            [{ text: '🌍 UTC' }]
+                        ],
+                        resize_keyboard: true,
+                        one_time_keyboard: true
+                    }
+                };
+                
+                const currentTimezone = context.isGroup && context.group
+                    ? (context.group.timezone || 'UTC')
+                    : (context.user.timezone || 'UTC');
+                
+                const timezoneDisplay = currentTimezone === 'Asia/Jerusalem' ? 'IL (Asia/Jerusalem)' : 'UTC';
+                await sendResponse(
+                    msg.chat.id,
+                    `⏰ אזור זמן נוכחי: ${timezoneDisplay}\n\nבחר אזור זמן חדש:`,
+                    keyboard
+                );
+                return;
+            } catch (error: any) {
+                console.error('Error handling /timezone:', error);
+                await sendResponse(msg.chat.id, 'שגיאה בהצגת אפשרויות אזור זמן: ' + (error.message || String(error)));
+                return;
+            }
+        }
+        
+        // Handle timezone selection from keyboard
+        if (msg.text === '🇮🇱 IL (Asia/Jerusalem)' || msg.text === '🌍 UTC') {
+            try {
+                const context = await handleMessage(msg);
+                const { GroupModel } = await import('./models/group.js');
+                
+                let newTimezone: string;
+                if (msg.text === '🇮🇱 IL (Asia/Jerusalem)') {
+                    newTimezone = 'Asia/Jerusalem';
+                } else {
+                    newTimezone = 'UTC';
+                }
+                
+                if (context.isGroup && context.group) {
+                    // Update group timezone
+                    await GroupModel.update(context.group.id, { timezone: newTimezone });
+                    await sendResponse(
+                        msg.chat.id,
+                        `✅ אזור הזמן של הקבוצה עודכן ל: ${newTimezone === 'Asia/Jerusalem' ? 'IL (Asia/Jerusalem)' : 'UTC'}`,
+                        { reply_markup: { remove_keyboard: true } }
+                    );
+                } else {
+                    // Update user timezone
+                    await UserModel.update(context.user.id, { timezone: newTimezone });
+                    await sendResponse(
+                        msg.chat.id,
+                        `✅ אזור הזמן שלך עודכן ל: ${newTimezone === 'Asia/Jerusalem' ? 'IL (Asia/Jerusalem)' : 'UTC'}`,
+                        { reply_markup: { remove_keyboard: true } }
+                    );
+                }
+                return;
+            } catch (error: any) {
+                console.error('Error handling timezone selection:', error);
+                await sendResponse(msg.chat.id, 'שגיאה בעדכון אזור זמן: ' + (error.message || String(error)));
                 return;
             }
         }

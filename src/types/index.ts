@@ -15,6 +15,7 @@ export interface Group extends RowDataPacket {
     id: number;
     telegram_chat_id: number;
     group_name: string | null;
+    timezone: string;
     created_at: Date;
     updated_at: Date;
 }
@@ -125,10 +126,12 @@ export interface UpdateUserData {
 export interface CreateGroupData {
     telegramChatId: number;
     groupName?: string | null;
+    timezone?: string;
 }
 
 export interface UpdateGroupData {
-    groupName?: string;
+    groupName?: string | null;
+    timezone?: string;
 }
 
 export interface CreateTodoData {

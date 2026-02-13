@@ -43,6 +43,7 @@ You need to extract the action and parameters from the user's message. Return ON
   "scope": "me|all_of_us|me_and_x",
   "scope_users": ["user_name1", "user_name2"],
   "parameters": {
+    "id": 1 or null,
     "task": "...",
     "priority": "low|medium|high",
     "deadline": "YYYY-MM-DD HH:MM:SS",
@@ -78,6 +79,50 @@ Operations:
 - "mark_complete": Mark todo as complete
 - "mark_purchased": Mark shopping item as purchased
 - "set_name": Set user's custom name
+
+For operations requiring ID (mark_complete, delete, update) - CRITICAL - ID EXTRACTION:
+- The "id" parameter MUST be a number (integer), not a string
+- Extract ID from various formats:
+  * "task id 1" or "task 1" or "id 1" -> parameters: { "id": 1 }
+  * "task #1" or "#1" -> parameters: { "id": 1 }
+  * "the first task" -> parameters: { "id": 1 } (if referring to first task in list)
+  * "משימה 1" or "משימה מספר 1" -> parameters: { "id": 1 }
+  * "את המשימה 1" -> parameters: { "id": 1 }
+
+For mark_complete operation:
+- Recognize completion phrases:
+  * English: "finished", "completed", "done", "finished task", "completed task", "done with task", "I finished", "I completed", "I'm done"
+  * Hebrew: "סיימתי", "הושלמה", "סיימתי את", "הושלמה המשימה", "סיימתי משימה"
+- For marking ALL tasks as complete (CRITICAL - MUST include "id": null in JSON):
+  * "I finished all tasks" or "I finished all my tasks" -> action: "todo", operation: "mark_complete", parameters: { "id": null }
+  * "I completed all tasks" or "I completed all my tasks" -> action: "todo", operation: "mark_complete", parameters: { "id": null }
+  * "I'm done with all tasks" -> action: "todo", operation: "mark_complete", parameters: { "id": null }
+  * "סיימתי את כל המשימות" or "סיימתי הכל" or "הושלמו כל המשימות" -> action: "todo", operation: "mark_complete", parameters: { "id": null }
+  * "finished everything" or "completed everything" -> action: "todo", operation: "mark_complete", parameters: { "id": null }
+  * "I have finished all my tasks" -> action: "todo", operation: "mark_complete", parameters: { "id": null }
+- For marking a specific task:
+  * "I finished task id 1" -> action: "todo", operation: "mark_complete", parameters: { "id": 1 }
+  * "completed task 5" -> action: "todo", operation: "mark_complete", parameters: { "id": 5 }
+  * "סיימתי משימה 2" -> action: "todo", operation: "mark_complete", parameters: { "id": 2 }
+  * "done with task #3" -> action: "todo", operation: "mark_complete", parameters: { "id": 3 }
+- CRITICAL RULE: When user says "all tasks", "all my tasks", "everything", "כל המשימות", "הכל", "כל המשימות שלי" -> you MUST include "id": null in the parameters object. DO NOT omit the id field. The JSON must explicitly contain "id": null.
+
+For delete operation:
+- Recognize deletion phrases:
+  * English: "delete", "remove", "remove task", "delete task", "cancel task"
+  * Hebrew: "מחק", "הסר", "מחק משימה", "הסר משימה", "בטל משימה"
+- Examples:
+  * "delete task id 1" -> action: "todo", operation: "delete", parameters: { "id": 1 }
+  * "remove task 5" -> action: "todo", operation: "delete", parameters: { "id": 5 }
+  * "מחק משימה 2" -> action: "todo", operation: "delete", parameters: { "id": 2 }
+
+For update operation:
+- Recognize update phrases:
+  * English: "update", "change", "modify", "edit"
+  * Hebrew: "עדכן", "שנה", "ערוך"
+- Examples:
+  * "update task id 1 priority to high" -> action: "todo", operation: "update", parameters: { "id": 1, "priority": "high" }
+  * "change task 5 deadline to tomorrow" -> action: "todo", operation: "update", parameters: { "id": 5, "deadline": "tomorrow" }
 
 For shopping items - CATEGORY EXTRACTION (CRITICAL - READ CAREFULLY):
 - You MUST extract the category field. Category extraction is MANDATORY.
@@ -280,7 +325,7 @@ export async function parseMessage(messageText: string, context: LLMContext, mes
                     messages: [
                         {
                             role: 'system',
-                            content: 'You are a helpful assistant that extracts structured data from user messages. Always return valid JSON only. CRITICAL: For shopping items, you MUST ALWAYS extract the category field. If the user mentions a category explicitly, use that category. If NO category is mentioned, you MUST INFER a reasonable category using HEBREW category names (e.g., milk/חלב -> "מוצרי חלב", bread/לחם -> "מאפייה", carrots/גזרים -> "ירקות", chicken/עוף -> "בשר"). NEVER set category to null. For "I bought" messages (English or Hebrew like "קניתי"), recognize them as mark_purchased operations. When user says "I bought everything" or "I bought all" or "קניתי הכל", set parameters.item to null (not undefined, not empty string, but explicitly null) to mark all items. Always include category and amount fields in the parameters object.'
+                            content: 'You are a helpful assistant that extracts structured data from user messages. Always return valid JSON only. CRITICAL: For shopping items, you MUST ALWAYS extract the category field. If the user mentions a category explicitly, use that category. If NO category is mentioned, you MUST INFER a reasonable category using HEBREW category names (e.g., milk/חלב -> "מוצרי חלב", bread/לחם -> "מאפייה", carrots/גזרים -> "ירקות", chicken/עוף -> "בשר"). NEVER set category to null. For "I bought" messages (English or Hebrew like "קניתי"), recognize them as mark_purchased operations. When user says "I bought everything" or "I bought all" or "קניתי הכל", set parameters.item to null (not undefined, not empty string, but explicitly null) to mark all items. For "I finished all tasks" or "I completed all my tasks" or similar phrases, set parameters.id to null (not undefined, not 0, but explicitly null) to mark all tasks. Always include category and amount fields in the parameters object. When marking all tasks, ALWAYS include "id": null in the parameters object.'
                         },
                         {
                             role: 'user',

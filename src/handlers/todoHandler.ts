@@ -18,7 +18,7 @@ export const todoHandler = {
                 return await this.update(parameters, user);
             
             case 'mark_complete':
-                return await this.markComplete(parameters);
+                return await this.markComplete(parameters, user, group);
             
             case 'delete':
                 return await this.delete(parameters);
@@ -160,7 +160,54 @@ export const todoHandler = {
         };
     },
     
-    async markComplete(parameters: ParsedAction['parameters']): Promise<HandlerResult & { todo: TodoWithParsedIds | null }> {
+    async markComplete(parameters: ParsedAction['parameters'], user: User, group: Group | null): Promise<HandlerResult & { todo?: TodoWithParsedIds | null; todos?: TodoWithParsedIds[] }> {
+        // Handle "mark all" - when id is null or undefined (e.g., "I finished all tasks")
+        // Check if this is a "mark all" request by checking if id is null/undefined
+        // and there's no specific task mentioned
+        if (parameters.id === null || (parameters.id === undefined && !parameters.task)) {
+            // Get all incomplete todos for the user
+            const allTodos = await TodoModel.findByUser(user.id, {
+                includeCompleted: false
+            });
+            
+            // Also get group todos if in a group
+            if (group) {
+                const groupTodos = await TodoModel.findByGroup(group.id, {
+                    includeCompleted: false
+                });
+                allTodos.push(...groupTodos);
+                
+                // Get assigned todos
+                const assignedTodos = await TodoModel.findByAssignedUser(user.id, {
+                    includeCompleted: false
+                });
+                allTodos.push(...assignedTodos);
+            }
+            
+            // Remove duplicates
+            const uniqueTodos = allTodos.filter((todo, index, self) =>
+                index === self.findIndex(t => t.id === todo.id)
+            );
+            
+            if (uniqueTodos.length === 0) {
+                return {
+                    success: true,
+                    message: '✅ אין משימות לסמן כהושלמו'
+                };
+            }
+            
+            // Mark all as completed
+            for (const todo of uniqueTodos) {
+                await TodoModel.update(todo.id, { completed: true });
+            }
+            
+            return {
+                success: true,
+                message: `✅ סומנו ${uniqueTodos.length} משימות כהושלמו`,
+                todos: uniqueTodos
+            };
+        }
+        
         if (!parameters.id) {
             throw new Error('Todo ID is required');
         }

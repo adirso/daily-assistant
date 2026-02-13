@@ -11,11 +11,11 @@ export const GroupModel = {
     },
 
     async create(groupData: CreateGroupData): Promise<Group | null> {
-        const { telegramChatId, groupName } = groupData;
+        const { telegramChatId, groupName, timezone } = groupData;
         const [result] = await pool.execute(
-            `INSERT INTO \`groups\` (telegram_chat_id, group_name)
-             VALUES (?, ?)`,
-            [telegramChatId, groupName || null]
+            `INSERT INTO \`groups\` (telegram_chat_id, group_name, timezone)
+             VALUES (?, ?, ?)`,
+            [telegramChatId, groupName || null, timezone || 'UTC']
         );
         const insertResult = result as any;
         return this.findById(insertResult.insertId);
@@ -33,6 +33,10 @@ export const GroupModel = {
         if (updates.groupName !== undefined) {
             fields.push('group_name = ?');
             values.push(updates.groupName);
+        }
+        if (updates.timezone !== undefined) {
+            fields.push('timezone = ?');
+            values.push(updates.timezone);
         }
 
         if (fields.length === 0) return this.findById(id);

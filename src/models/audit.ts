@@ -39,6 +39,42 @@ export const MessageAuditModel = {
             [groupId, limit]
         );
         return rows;
+    },
+
+    /**
+     * Get the most recent chat ID for a user (from private chats only)
+     */
+    async getUserChatId(userId: number): Promise<number | null> {
+        const [rows] = await pool.execute<MessageAudit[]>(
+            'SELECT chat_id FROM message_audit WHERE user_id = ? AND group_id IS NULL ORDER BY received_at DESC LIMIT 1',
+            [userId]
+        );
+        return rows[0]?.chat_id || null;
+    },
+
+    /**
+     * Get all users with their chat IDs (for notifications)
+     */
+    async getAllUsersWithChatIds(): Promise<Array<{ userId: number; chatId: number }>> {
+        const [rows] = await pool.execute<any[]>(
+            `SELECT DISTINCT user_id, chat_id 
+             FROM message_audit 
+             WHERE group_id IS NULL 
+             ORDER BY user_id, received_at DESC`
+        );
+        
+        // Get the most recent chat_id for each user
+        const userChatMap = new Map<number, number>();
+        for (const row of rows) {
+            if (!userChatMap.has(row.user_id)) {
+                userChatMap.set(row.user_id, row.chat_id);
+            }
+        }
+        
+        return Array.from(userChatMap.entries()).map(([userId, chatId]) => ({
+            userId,
+            chatId
+        }));
     }
 };
 
