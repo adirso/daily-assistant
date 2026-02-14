@@ -360,9 +360,9 @@ If you see `Access denied for user 'username'@'localhost' to database 'telegram_
 # Login as MySQL root user
 mysql -u root -p
 
-# Then run these SQL commands:
+# Then run these SQL commands (replace 'your_db_user' with your actual MySQL username):
 CREATE DATABASE IF NOT EXISTS telegram_bot_assistant CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-GRANT ALL PRIVILEGES ON telegram_bot_assistant.* TO 'mia'@'localhost';
+GRANT ALL PRIVILEGES ON telegram_bot_assistant.* TO 'your_db_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
@@ -371,10 +371,10 @@ FLUSH PRIVILEGES;
 # Login as MySQL root user
 mysql -u root -p
 
-# Then run these SQL commands:
+# Then run these SQL commands (replace 'your_db_user' and 'your_password_here' with your desired values):
 CREATE DATABASE IF NOT EXISTS telegram_bot_assistant CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS 'mia'@'localhost' IDENTIFIED BY 'your_password_here';
-GRANT ALL PRIVILEGES ON telegram_bot_assistant.* TO 'mia'@'localhost';
+CREATE USER IF NOT EXISTS 'your_db_user'@'localhost' IDENTIFIED BY 'your_password_here';
+GRANT ALL PRIVILEGES ON telegram_bot_assistant.* TO 'your_db_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
