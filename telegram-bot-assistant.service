@@ -5,11 +5,11 @@ Wants=mysql.service
 
 [Service]
 Type=simple
-User=rasp-adir
-WorkingDirectory=/home/rasp-adir/Projects/daily-assistant
+User=your_username
+WorkingDirectory=/home/your_username/Projects/daily-assistant
 Environment="NODE_ENV=production"
-EnvironmentFile=/home/rasp-adir/Projects/daily-assistant/.env
-ExecStart=/usr/bin/node /home/rasp-adir/Projects/daily-assistant/dist/index.js
+EnvironmentFile=/home/your_username/Projects/daily-assistant/.env
+ExecStart=/usr/bin/node /home/your_username/Projects/daily-assistant/dist/index.js
 Restart=always
 RestartSec=10
 StandardOutput=journal

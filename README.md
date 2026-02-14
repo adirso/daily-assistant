@@ -451,10 +451,10 @@ sudo nano /etc/systemd/system/telegram-bot-assistant.service
 ```
 
 Update these paths if needed:
-- `User=` - Your Linux username (e.g., `rasp-adir`)
-- `WorkingDirectory=` - Full path to your project directory
-- `EnvironmentFile=` - Full path to your `.env` file
-- `ExecStart=` - Path to node binary (usually `/usr/bin/node`)
+- `User=` - Your Linux username (e.g., `your_username`)
+- `WorkingDirectory=` - Full path to your project directory (e.g., `/home/your_username/Projects/daily-assistant`)
+- `EnvironmentFile=` - Full path to your `.env` file (e.g., `/home/your_username/Projects/daily-assistant/.env`)
+- `ExecStart=` - Path to node binary (usually `/usr/bin/node`, check with `which node`)
 
 ### Step 4: Reload Systemd
 
@@ -523,11 +523,11 @@ sudo cat /etc/systemd/system/telegram-bot-assistant.service
 
 **Permission issues:**
 ```bash
-# Ensure .env file is readable
-chmod 600 /home/rasp-adir/Projects/daily-assistant/.env
+# Ensure .env file is readable (replace with your actual path)
+chmod 600 /home/your_username/Projects/daily-assistant/.env
 
-# Check file ownership
-ls -la /home/rasp-adir/Projects/daily-assistant/.env
+# Check file ownership (replace with your actual path)
+ls -la /home/your_username/Projects/daily-assistant/.env
 ```
 
 **Node.js not found:**
