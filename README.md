@@ -15,6 +15,8 @@ A TypeScript-based Telegram bot that helps users manage todos, shopping lists, a
 - **📊 Audit Logging**: All messages and LLM interactions are logged for debugging and analysis
 - **🔄 Automatic Migrations**: Database migrations run automatically on startup
 
+---
+
 ## 📋 Prerequisites
 
 Before you begin, ensure you have:
@@ -23,6 +25,8 @@ Before you begin, ensure you have:
 - **MySQL** (v5.7 or higher) - [Download](https://dev.mysql.com/downloads/)
 - **Telegram Bot Token** - Get from [@BotFather](https://t.me/botfather) on Telegram
 - **OpenAI API Key** - Get from [OpenAI Platform](https://platform.openai.com/api-keys)
+
+---
 
 ## 🚀 Quick Start
 
@@ -116,21 +120,7 @@ You should see:
 Telegram Bot Assistant is running...
 ```
 
-## 🛠️ Development
-
-For development with auto-reload:
-
-```bash
-npm run dev
-```
-
-Other available commands:
-
-```bash
-npm run build          # Compile TypeScript to JavaScript
-npm run type-check     # Check TypeScript types without building
-npm run migrate        # Run migrations manually (usually not needed)
-```
+---
 
 ## 💬 Usage
 
@@ -142,6 +132,7 @@ npm run migrate        # Run migrations manually (usually not needed)
 
 ### Commands
 
+- `/start` - Show welcome message and bot instructions
 - `/timezone` - Set your timezone (IL or UTC) with interactive keyboard
 - `/setname Your Name` - Set your custom name in the bot
 
@@ -175,13 +166,13 @@ Add conference from 9am to 5pm on Friday
 Add wedding on Wednesday 18.02
 ```
 
-## 🎯 Scope Behavior
+### Scope Behavior
 
-### Private Chats
+#### Private Chats
 - Only "me" scope is available
 - All items are personal to you
 
-### Group Chats
+#### Group Chats
 Three scopes are available:
 
 1. **"me"** - Personal item for you only
@@ -192,6 +183,8 @@ Three scopes are available:
    
 3. **"me and x"** - Item shared between you and specified users
    - Example: "Add design review task for me and John"
+
+---
 
 ## ⏰ Automatic Notifications
 
@@ -210,6 +203,8 @@ The bot automatically sends notifications:
 
 All notifications respect your timezone setting (set via `/timezone` command).
 
+---
+
 ## 🌍 Timezone Support
 
 - Set your timezone using `/timezone` command
@@ -219,7 +214,47 @@ All notifications respect your timezone setting (set via `/timezone` command).
 - In group chats, the group timezone is used
 - All dates and times are displayed in your timezone
 
-## 📊 Database Schema
+---
+
+## 🛠️ Development
+
+For development with auto-reload:
+
+```bash
+npm run dev
+```
+
+### Available Commands
+
+```bash
+npm run build          # Compile TypeScript to JavaScript
+npm run start          # Run the compiled bot
+npm run dev            # Run with auto-reload (development)
+npm run type-check     # Check TypeScript types without building
+npm run migrate        # Run migrations manually (usually not needed)
+```
+
+---
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `TELEGRAM_BOT_TOKEN` | Your Telegram bot token from BotFather | ✅ Yes | - |
+| `OPENAI_API_KEY` | Your OpenAI API key | ✅ Yes | - |
+| `DB_HOST` | MySQL host address | ✅ Yes | localhost |
+| `DB_USER` | MySQL username | ✅ Yes | - |
+| `DB_PASSWORD` | MySQL password | ✅ Yes | - |
+| `DB_NAME` | Database name | ✅ Yes | telegram_bot_assistant |
+| `DB_PORT` | MySQL port | ❌ No | 3306 |
+
+---
+
+## 📊 Database
+
+### Schema Overview
 
 The bot uses the following main tables:
 
@@ -233,7 +268,7 @@ The bot uses the following main tables:
 - `llm_audit` - Audit log of all LLM interactions
 - `migrations` - Tracks executed database migrations
 
-## 🔍 Audit Logging
+### Audit Logging
 
 All messages and LLM interactions are logged to the database for:
 - Debugging parsing issues
@@ -241,7 +276,7 @@ All messages and LLM interactions are logged to the database for:
 - Reviewing user interactions
 - Improving prompts based on actual usage
 
-### Query Audit Logs
+#### Query Audit Logs
 
 ```sql
 -- Find all messages from a user
@@ -256,6 +291,8 @@ SELECT SUM(tokens_used) FROM llm_audit WHERE created_at >= ?;
 -- Review failed parses
 SELECT * FROM llm_audit WHERE parsed_action IS NULL;
 ```
+
+---
 
 ## 📁 Project Structure
 
@@ -273,7 +310,7 @@ daily-assistant/
 │   │   └── actionRouter.ts        # Action routing
 │   ├── handlers/
 │   │   ├── todoHandler.ts         # Todo operations
-│   │   ├── shoppingHandler.ts    # Shopping operations
+│   │   ├── shoppingHandler.ts     # Shopping operations
 │   │   ├── calendarHandler.ts     # Calendar operations
 │   │   ├── queryHandler.ts        # Query handling
 │   │   └── userHandler.ts         # User management
@@ -302,22 +339,14 @@ daily-assistant/
 ├── dist/                           # Compiled JavaScript (generated)
 ├── .env                            # Environment variables (create this)
 ├── .env.example                    # Environment variables template
+├── telegram-bot-assistant.service  # Systemd service template
+├── setup-service.sh                # Service setup script
 ├── tsconfig.json                   # TypeScript configuration
 ├── package.json                    # Node.js dependencies
 └── README.md                       # This file
 ```
 
-## 🔧 Environment Variables
-
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `TELEGRAM_BOT_TOKEN` | Your Telegram bot token from BotFather | ✅ Yes | - |
-| `OPENAI_API_KEY` | Your OpenAI API key | ✅ Yes | - |
-| `DB_HOST` | MySQL host address | ✅ Yes | localhost |
-| `DB_USER` | MySQL username | ✅ Yes | - |
-| `DB_PASSWORD` | MySQL password | ✅ Yes | - |
-| `DB_NAME` | Database name | ✅ Yes | telegram_bot_assistant |
-| `DB_PORT` | MySQL port | ❌ No | 3306 |
+---
 
 ## 📦 Dependencies
 
@@ -335,6 +364,8 @@ daily-assistant/
 - `@types/node` - Node.js type definitions
 - `@types/node-telegram-bot-api` - Telegram bot type definitions
 - `@types/node-cron` - Cron type definitions
+
+---
 
 ## 🐛 Troubleshooting
 
@@ -409,6 +440,8 @@ DB_PASSWORD=your_root_password
 - ✅ Verify timezone is set correctly (`/timezone` command)
 - ✅ Check that todos/events have deadlines/start times set
 
+---
+
 ## 🔐 Security Notes
 
 - ⚠️ **Never commit `.env` file** - It contains sensitive credentials
@@ -416,25 +449,38 @@ DB_PASSWORD=your_root_password
 - ⚠️ **Use strong database passwords** - Especially in production
 - ⚠️ **Limit database user permissions** - Use least privilege principle
 
-## 📝 License
-
-ISC
+---
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 🚀 Running as a System Service (Linux/Raspberry Pi)
+### Running as a System Service (Linux/Raspberry Pi)
 
 To run the bot as a systemd service on Linux (e.g., Raspberry Pi):
 
-### Step 1: Build the Project
+#### Option 1: Automated Setup (Recommended)
+
+```bash
+cd ~/Projects/daily-assistant
+chmod +x setup-service.sh
+./setup-service.sh
+```
+
+The script will:
+- Detect your paths automatically
+- Create the service file with correct paths
+- Optionally install and start the service
+
+#### Option 2: Manual Setup
+
+**Step 1: Build the Project**
 
 ```bash
 npm run build
 ```
 
-### Step 2: Create Systemd Service File
+**Step 2: Create Systemd Service File**
 
 Copy the service file to systemd directory:
 
@@ -442,7 +488,7 @@ Copy the service file to systemd directory:
 sudo cp telegram-bot-assistant.service /etc/systemd/system/
 ```
 
-### Step 3: Edit the Service File
+**Step 3: Edit the Service File**
 
 Edit the service file to match your setup:
 
@@ -456,13 +502,13 @@ Update these paths if needed:
 - `EnvironmentFile=` - Full path to your `.env` file (e.g., `/home/your_username/Projects/daily-assistant/.env`)
 - `ExecStart=` - Path to node binary (usually `/usr/bin/node`, check with `which node`)
 
-### Step 4: Reload Systemd
+**Step 4: Reload Systemd**
 
 ```bash
 sudo systemctl daemon-reload
 ```
 
-### Step 5: Enable and Start the Service
+**Step 5: Enable and Start the Service**
 
 ```bash
 # Enable service to start on boot
@@ -475,7 +521,7 @@ sudo systemctl start telegram-bot-assistant.service
 sudo systemctl status telegram-bot-assistant.service
 ```
 
-### Managing the Service
+#### Managing the Service
 
 ```bash
 # Start the service
@@ -490,24 +536,14 @@ sudo systemctl restart telegram-bot-assistant
 # Check status
 sudo systemctl status telegram-bot-assistant
 
-# View logs
+# View logs (real-time)
 sudo journalctl -u telegram-bot-assistant -f
 
 # View recent logs
 sudo journalctl -u telegram-bot-assistant -n 100
-
-# Follow logs in real-time
-sudo journalctl -u telegram-bot-assistant -f
 ```
 
-### Service File Location
-
-The service file template is included in the repository as `telegram-bot-assistant.service`. Make sure to:
-- Update paths to match your system
-- Ensure the `.env` file is readable by the service user
-- Verify Node.js path with `which node`
-
-### Troubleshooting Service Issues
+#### Troubleshooting Service Issues
 
 **Service won't start:**
 ```bash
@@ -538,6 +574,14 @@ which node
 # Or use full path in service file
 which nodejs  # Some systems use 'nodejs' instead of 'node'
 ```
+
+---
+
+## 📝 License
+
+ISC
+
+---
 
 ## 📞 Support
 
