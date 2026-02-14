@@ -1,0 +1,24 @@
+[Unit]
+Description=Telegram Bot Assistant - Daily Assistant Bot
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=rasp-adir
+WorkingDirectory=/home/rasp-adir/Projects/daily-assistant
+Environment="NODE_ENV=production"
+EnvironmentFile=/home/rasp-adir/Projects/daily-assistant/.env
+ExecStart=/usr/bin/node /home/rasp-adir/Projects/daily-assistant/dist/index.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=telegram-bot-assistant
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -424,12 +424,128 @@ ISC
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## 🚀 Running as a System Service (Linux/Raspberry Pi)
+
+To run the bot as a systemd service on Linux (e.g., Raspberry Pi):
+
+### Step 1: Build the Project
+
+```bash
+npm run build
+```
+
+### Step 2: Create Systemd Service File
+
+Copy the service file to systemd directory:
+
+```bash
+sudo cp telegram-bot-assistant.service /etc/systemd/system/
+```
+
+### Step 3: Edit the Service File
+
+Edit the service file to match your setup:
+
+```bash
+sudo nano /etc/systemd/system/telegram-bot-assistant.service
+```
+
+Update these paths if needed:
+- `User=` - Your Linux username (e.g., `rasp-adir`)
+- `WorkingDirectory=` - Full path to your project directory
+- `EnvironmentFile=` - Full path to your `.env` file
+- `ExecStart=` - Path to node binary (usually `/usr/bin/node`)
+
+### Step 4: Reload Systemd
+
+```bash
+sudo systemctl daemon-reload
+```
+
+### Step 5: Enable and Start the Service
+
+```bash
+# Enable service to start on boot
+sudo systemctl enable telegram-bot-assistant.service
+
+# Start the service
+sudo systemctl start telegram-bot-assistant.service
+
+# Check status
+sudo systemctl status telegram-bot-assistant.service
+```
+
+### Managing the Service
+
+```bash
+# Start the service
+sudo systemctl start telegram-bot-assistant
+
+# Stop the service
+sudo systemctl stop telegram-bot-assistant
+
+# Restart the service
+sudo systemctl restart telegram-bot-assistant
+
+# Check status
+sudo systemctl status telegram-bot-assistant
+
+# View logs
+sudo journalctl -u telegram-bot-assistant -f
+
+# View recent logs
+sudo journalctl -u telegram-bot-assistant -n 100
+
+# Follow logs in real-time
+sudo journalctl -u telegram-bot-assistant -f
+```
+
+### Service File Location
+
+The service file template is included in the repository as `telegram-bot-assistant.service`. Make sure to:
+- Update paths to match your system
+- Ensure the `.env` file is readable by the service user
+- Verify Node.js path with `which node`
+
+### Troubleshooting Service Issues
+
+**Service won't start:**
+```bash
+# Check service status
+sudo systemctl status telegram-bot-assistant
+
+# Check logs for errors
+sudo journalctl -u telegram-bot-assistant -n 50
+
+# Verify paths in service file
+sudo cat /etc/systemd/system/telegram-bot-assistant.service
+```
+
+**Permission issues:**
+```bash
+# Ensure .env file is readable
+chmod 600 /home/rasp-adir/Projects/daily-assistant/.env
+
+# Check file ownership
+ls -la /home/rasp-adir/Projects/daily-assistant/.env
+```
+
+**Node.js not found:**
+```bash
+# Find Node.js path
+which node
+
+# Or use full path in service file
+which nodejs  # Some systems use 'nodejs' instead of 'node'
+```
+
 ## 📞 Support
 
 For issues and questions:
 - Check the [Troubleshooting](#-troubleshooting) section
 - Review audit logs in the database
 - Check console output for error messages
+- For service issues, check systemd logs: `sudo journalctl -u telegram-bot-assistant`
 
 ---
 
