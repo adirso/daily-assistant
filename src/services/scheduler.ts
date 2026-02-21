@@ -58,9 +58,15 @@ export const schedulerService = {
                 // Get today's date in user's timezone
                 const today = timezoneUtils.getToday(userTimezone);
 
-                // Get today's events
+                // Get today's events: use UTC range so events match "today" in user's timezone
+                // (start_time is stored in UTC; DATE(start_time) in DB would use server TZ and miss events)
+                const startDateTime = today + ' 00:00:00';
+                const endDateTime = today + ' 23:59:59';
+                const startDateUTC = timezoneUtils.toUTC(startDateTime, userTimezone);
+                const endDateUTC = timezoneUtils.toUTC(endDateTime, userTimezone);
                 const events = await CalendarEventModel.findByUser(userId, {
-                    date: today
+                    startDate: startDateUTC || undefined,
+                    endDate: endDateUTC || undefined
                 });
 
                 // Get today's todos (with deadline today or no deadline)

@@ -251,6 +251,7 @@ export const todoHandler = {
         
         // Parse date or date range
         let parsedDate: string | null = null;
+        const isTodayQuery = date === 'today' || date === 'היום';
         
         if (date) {
             parsedDate = timezoneUtils.parseDate(date, userTimezone);
@@ -267,27 +268,71 @@ export const todoHandler = {
         
         const todos: TodoWithParsedIds[] = [];
         
-        // Get personal todos
-        const personalTodos = await TodoModel.findByUser(user.id, {
-            includeCompleted: false,
-            deadline: parsedDate || null
-        });
-        todos.push(...personalTodos);
-        
-        // Get group todos if in group
-        if (group) {
-            const groupTodos = await TodoModel.findByGroup(group.id, {
-                includeCompleted: false,
-                deadline: parsedDate || null
-            });
-            todos.push(...groupTodos);
+        // For "today" queries, get all incomplete todos and filter (like scheduler does)
+        // This includes todos with deadline today OR no deadline
+        if (isTodayQuery) {
+            const today = timezoneUtils.getToday(userTimezone);
             
-            // Assigned todos
-            const assignedTodos = await TodoModel.findByAssignedUser(user.id, {
+            // Get all incomplete personal todos
+            const allPersonalTodos = await TodoModel.findByUser(user.id, {
+                includeCompleted: false
+            });
+            
+            // Filter: deadline today OR no deadline
+            const todayPersonalTodos = allPersonalTodos.filter(todo => {
+                if (!todo.deadline) return true; // Include todos without deadlines
+                const todoDate = timezoneUtils.toUserTimezone(todo.deadline, userTimezone)?.split(' ')[0];
+                return todoDate === today;
+            });
+            todos.push(...todayPersonalTodos);
+            
+            // Get group todos if in group
+            if (group) {
+                const allGroupTodos = await TodoModel.findByGroup(group.id, {
+                    includeCompleted: false
+                });
+                const todayGroupTodos = allGroupTodos.filter(todo => {
+                    if (!todo.deadline) return true;
+                    const todoDate = timezoneUtils.toUserTimezone(todo.deadline, userTimezone)?.split(' ')[0];
+                    return todoDate === today;
+                });
+                todos.push(...todayGroupTodos);
+                
+                // Assigned todos
+                const allAssignedTodos = await TodoModel.findByAssignedUser(user.id, {
+                    includeCompleted: false
+                });
+                const todayAssignedTodos = allAssignedTodos.filter(todo => {
+                    if (!todo.deadline) return true;
+                    const todoDate = timezoneUtils.toUserTimezone(todo.deadline, userTimezone)?.split(' ')[0];
+                    return todoDate === today;
+                });
+                todos.push(...todayAssignedTodos);
+            }
+        } else {
+            // For other date queries, use the model's deadline filtering
+            // Get personal todos
+            const personalTodos = await TodoModel.findByUser(user.id, {
                 includeCompleted: false,
                 deadline: parsedDate || null
             });
-            todos.push(...assignedTodos);
+            todos.push(...personalTodos);
+            
+            // Get group todos if in group
+            if (group) {
+                const groupTodos = await TodoModel.findByGroup(group.id, {
+                    includeCompleted: false,
+                    deadline: parsedDate || null
+                });
+                todos.push(...groupTodos);
+                
+                // Assigned todos
+                const assignedTodos = await TodoModel.findByAssignedUser(user.id, {
+                    includeCompleted: false,
+                    deadline: parsedDate || null
+                });
+                todos.push(...assignedTodos);
+            }
         }
         
         // Remove duplicates
